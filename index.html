@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
+    <title>Moto Racing 3D - Low Poly</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+        
+        <!-- Pantalla de Inicio / Splash -->
+        <div id="splash-screen" class="overlay">
+            <div class="splash-content">
+                <h1>MOTO RACING</h1>
+                <h2>3D</h2>
+                <div class="loader"></div>
+                <button id="start-button" class="hidden">INICIAR JUEGO</button>
+            </div>
+        </div>
+
+        <!-- HUD -->
+        <div id="hud" class="hidden">
+            <div class="health-container">
+                <div id="health-bar-fill"></div>
+                <span id="health-text">100%</span>
+            </div>
+            <div id="score">0m</div>
+            <div id="speed-meter">0 KM/H</div>
+        </div>
+
+        <!-- Game Over -->
+        <div id="game-over" class="overlay hidden">
+            <div class="game-over-content">
+                <h1>¡FIN DEL JUEGO!</h1>
+                <p>Distancia Recorrida: <span id="final-score">0</span>m</p>
+                <button id="restart-button">REINTENTAR</button>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="./main.js"></script>
+</body>
+</html>
