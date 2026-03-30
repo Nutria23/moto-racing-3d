@@ -9,8 +9,9 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@capacitor/cli": "^6.2.1",
     "@types/three": "^0.183.1",
-    "vite": "^8.0.3"
+    "vite": "^6.4.1"
   },
   "description": "",
   "main": "index.js",
@@ -18,9 +19,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@capacitor/android": "^8.3.0",
-    "@capacitor/cli": "^8.3.0",
-    "@capacitor/core": "^8.3.0",
+    "@capacitor/android": "^6.2.1",
+    "@capacitor/core": "^6.2.1",
     "three": "^0.183.2"
   }
 }
