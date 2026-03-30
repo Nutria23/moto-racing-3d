@@ -1,8 +1,10 @@
 :root {
-    --primary: #f0f0f0;
-    --accent: #ff0000;
-    --bg: #000;
-    --font: 'Outfit', 'Inter', sans-serif;
+    --primary: #ffffff;
+    --accent: #ff3e3e;
+    --bg-dark: rgba(0, 0, 0, 0.7);
+    --glass: rgba(255, 255, 255, 0.1);
+    --font-main: 'Outfit', sans-serif;
+    --font-heading: 'Orbitron', sans-serif;
 }
 
 body, html {
@@ -11,9 +13,9 @@ body, html {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: var(--bg);
+    background: #000;
     color: var(--primary);
-    font-family: var(--font);
+    font-family: var(--font-main);
 }
 
 #game-container {
@@ -28,7 +30,7 @@ body, html {
     height: 100%;
 }
 
-/* Overlays */
+/* Overlays con Glassmorphism */
 .overlay {
     position: absolute;
     top: 0;
@@ -38,17 +40,17 @@ body, html {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: rgba(0,0,0,0.8);
+    background: radial-gradient(circle at center, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.9) 100%);
+    backdrop-filter: blur(8px);
     z-index: 100;
-    transition: opacity 0.5s ease;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.visible { opacity: 1; visibility: visible; }
-.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+.visible { opacity: 1; pointer-events: all; }
+.hidden { opacity: 0; visibility: hidden; pointer-events: none; transform: scale(1.1); }
 
 /* Splash Screen */
 #splash-screen {
-    background: radial-gradient(circle, #222 0%, #000 100%);
     flex-direction: column;
 }
 
@@ -57,27 +59,35 @@ body, html {
 }
 
 .splash-content h1 {
-    font-size: 5rem;
-    letter-spacing: 0.5rem;
+    font-family: var(--font-heading);
+    font-size: clamp(3rem, 10vw, 6rem);
+    font-weight: 900;
+    letter-spacing: 0.8rem;
     margin: 0;
-    text-shadow: 0 0 20px rgba(255,255,255,0.2);
+    background: linear-gradient(180deg, #fff 0%, #aaa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 15px rgba(255,255,255,0.3));
 }
 
 .splash-content h2 {
-    font-size: 2rem;
+    font-family: var(--font-heading);
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
     color: var(--accent);
     margin-top: -1rem;
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
+    letter-spacing: 0.4rem;
+    text-transform: uppercase;
 }
 
 .loader {
-    width: 50px;
-    height: 50px;
-    border: 5px solid rgba(255,255,255,0.1);
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255,255,255,0.05);
     border-top-color: var(--accent);
     border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto;
+    animation: spin 0.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    margin: 0 auto 2rem;
 }
 
 @keyframes spin {
@@ -85,31 +95,37 @@ body, html {
 }
 
 button {
-    padding: 1rem 3rem;
-    font-size: 1.5rem;
-    background: transparent;
+    padding: 1rem 4rem;
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    background: var(--accent);
     color: white;
-    border: 2px solid white;
+    border: none;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    border-radius: 5px;
-    font-family: inherit;
-    font-weight: bold;
-    letter-spacing: 0.1rem;
+    transition: all 0.3s ease;
+    border-radius: 4px;
+    font-weight: 700;
+    letter-spacing: 0.2rem;
+    box-shadow: 0 4px 15px rgba(255, 62, 62, 0.4);
+    text-transform: uppercase;
 }
 
 button:hover {
-    background: white;
-    color: black;
-    transform: scale(1.05);
+    background: #ff5e5e;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(255, 62, 62, 0.6);
+}
+
+button:active {
+    transform: translateY(0);
 }
 
 /* HUD */
 #hud {
     position: absolute;
-    top: 20px;
-    left: 20px;
-    right: 20px;
+    top: 25px;
+    left: 25px;
+    right: 25px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -118,49 +134,81 @@ button:hover {
 }
 
 .health-container {
-    width: 200px;
-    height: 20px;
-    background: rgba(255,255,255,0.1);
-    border: 2px solid rgba(255,255,255,0.2);
+    width: 250px;
+    height: 12px;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.2);
     position: relative;
-    border-radius: 10px;
+    border-radius: 20px;
     overflow: hidden;
+    backdrop-filter: blur(5px);
 }
 
 #health-bar-fill {
     height: 100%;
     width: 100%;
-    background: linear-gradient(90deg, #ff0000, #ff5555);
-    transition: width 0.3s ease;
+    background: linear-gradient(90deg, #ff3e3e, #ff8a8a);
+    transition: width 0.2s ease-out;
+    box-shadow: 0 0 10px rgba(255, 62, 62, 0.5);
 }
 
 #health-text {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 0.8rem;
-    font-weight: bold;
+    top: -20px;
+    left: 0;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent);
 }
 
 #score, #speed-meter {
-    font-size: 1.5rem;
-    font-weight: bold;
-    text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+    font-family: var(--font-heading);
+    font-size: 1.8rem;
+    font-weight: 900;
+    text-shadow: 0 0 20px rgba(0,0,0,0.8);
+    background: var(--bg-dark);
+    padding: 0.5rem 1.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--glass);
+    backdrop-filter: blur(10px);
+}
+
+#speed-meter {
+    font-size: 1.4rem;
+    color: var(--accent);
 }
 
 /* Game Over */
 #game-over {
-    background: rgba(181, 0, 0, 0.2);
-    backdrop-filter: blur(10px);
+    background: rgba(0,0,0,0.85);
 }
 
-.game-over-content {
-    text-align: center;
+.game-over-content h1 {
+    font-family: var(--font-heading);
+    font-size: 4rem;
+    color: var(--accent);
+    margin-bottom: 0;
 }
 
-/* Responsive adjustments */
+.game-over-content p {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    opacity: 0.8;
+}
+
+#final-score {
+    font-family: var(--font-heading);
+    font-weight: 900;
+    color: #fff;
+}
+
+/* Mobile optimizations */
 @media (max-width: 768px) {
-    .splash-content h1 { font-size: 3rem; }
-    #score, #speed-meter { font-size: 1rem; }
+    .splash-content h1 { font-size: 3.5rem; letter-spacing: 0.4rem; }
+    #hud { top: 15px; left: 15px; right: 15px; flex-wrap: wrap; gap: 10px; }
+    .health-container { width: 150px; }
+    #score, #speed-meter { font-size: 1.1rem; padding: 0.3rem 0.8rem; }
+    button { padding: 0.8rem 2rem; font-size: 1rem; }
 }

@@ -11,18 +11,18 @@ export class Game {
 
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x87ceeb);
-        this.scene.fog = new THREE.Fog(0x87ceeb, 10, 100);
+        this.scene.fog = new THREE.Fog(0x87ceeb, 10, 150);
 
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.camera.position.set(0, 5, -8);
-        this.camera.lookAt(0, 2, 10);
-
+        // Ajustamos el FOV para una vista más dinámica
+        this.camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.camera.position.set(0, 4, -10); // Un poco más atrás y abajo para mejor vista
+        
         this.models = new GameModels();
         this.initLights();
         
         this.isRunning = false;
         this.speed = 0.5;
-        this.maxSpeed = 1.2;
+        this.maxSpeed = 1.6;
         this.lane = 0;
         this.laneWidth = 4;
         this.health = 100;
@@ -34,15 +34,32 @@ export class Game {
         this.lastSpawnTime = 0;
         this.touchStartX = 0;
         this.bindEvents();
+
+        // Efecto de velocidad (líneas de viento)
+        this.speedLines = [];
+        this.initSpeedLines();
     }
 
     initLights() {
-        const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+        const ambient = new THREE.AmbientLight(0xffffff, 0.7);
         this.scene.add(ambient);
-        const sun = new THREE.DirectionalLight(0xffffff, 1.0);
-        sun.position.set(10, 20, 10);
+        const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+        sun.position.set(20, 40, 20);
         sun.castShadow = true;
         this.scene.add(sun);
+    }
+
+    initSpeedLines() {
+        const geo = new THREE.BufferGeometry();
+        const pts = new Float32Array([0, 0, 0, 0, 0, 2]);
+        geo.setAttribute('position', new THREE.BufferAttribute(pts, 3));
+        const mat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 });
+        for(let i = 0; i < 20; i++) {
+            const line = new THREE.Line(geo, mat);
+            line.visible = false;
+            this.scene.add(line);
+            this.speedLines.push(line);
+        }
     }
 
     start() {
@@ -54,6 +71,7 @@ export class Game {
     reset() {
         while(this.scene.children.length > 0){ this.scene.remove(this.scene.children[0]); }
         this.initLights();
+        this.initSpeedLines();
         this.roadSegments = [];
         for(let i = 0; i < 5; i++) {
             const seg = this.models.createRoadSegment();
@@ -78,14 +96,20 @@ export class Game {
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(window.innerWidth, window.innerHeight);
         });
-        window.addEventListener('touchstart', (e) => this.touchStartX = e.touches[0].clientX);
+
+        // Controles de Deslizamiento (Swipe) Corregidos
+        window.addEventListener('touchstart', (e) => {
+            this.touchStartX = e.touches[0].clientX;
+        }, { passive: true });
+
         window.addEventListener('touchend', (e) => {
             const diff = e.changedTouches[0].clientX - this.touchStartX;
-            if (Math.abs(diff) > 30) {
-                if (diff > 0) this.moveLane(1);
-                else this.moveLane(-1);
+            if (Math.abs(diff) > 20) { // Mayor sensibilidad
+                if (diff > 0) this.moveLane(1);  // Swipe Derecha -> Mover Derecha
+                else this.moveLane(-1);         // Swipe Izquierda -> Mover Izquierda
             }
         });
+
         window.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft') this.moveLane(-1);
             if (e.key === 'ArrowRight') this.moveLane(1);
@@ -102,7 +126,7 @@ export class Game {
         const type = types[Math.floor(Math.random() * types.length)];
         let vehicle;
         if (type === 'car') {
-            const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00];
+            const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff];
             vehicle = this.models.createCar(colors[Math.floor(Math.random() * colors.length)]);
         } else if (type === 'bus') {
             vehicle = this.models.createBus();
@@ -110,47 +134,90 @@ export class Game {
             vehicle = this.models.createTrailer();
         }
         const lane = Math.floor(Math.random() * 3) - 1;
-        vehicle.position.set(lane * this.laneWidth, 0, 150);
+        vehicle.position.set(lane * this.laneWidth, 0, 200);
         this.scene.add(vehicle);
         this.traffic.push(vehicle);
     }
 
     update(delta) {
         if (!this.isRunning) return;
+
+        // Carretera infinita
         this.roadSegments.forEach(seg => {
-            seg.position.z -= this.speed * 100 * delta;
+            seg.position.z -= this.speed * 120 * delta;
             if (seg.position.z < -50) seg.position.z += 250;
         });
+
+        // Movimiento del jugador con inercia e INCLINACIÓN
         const targetX = this.lane * this.laneWidth;
-        this.player.position.x += (targetX - this.player.position.x) * 0.15;
-        this.player.rotation.z = -(this.player.position.x - targetX) * 0.2;
+        const xDiff = targetX - this.player.position.x;
+        this.player.position.x += xDiff * 0.12;
+        
+        // Efecto realista de inclinación (Moto se inclina hacia el giro)
+        this.player.rotation.z = -xDiff * 0.3;
+        this.player.rotation.y = xDiff * 0.1;
+
+        // CÁMARA FOLLOW (Sigue al jugador lateralmente para evitar que desaparezca)
+        // Lerp para suavizar el seguimiento
+        this.camera.position.x += (this.player.position.x - this.camera.position.x) * 0.08;
+        this.camera.lookAt(this.player.position.x * 0.5, 1.5, 20); // Mira hacia adelante
+
+        // Tráfico
         this.traffic.forEach((v, index) => {
-            v.position.z -= (this.speed * 100 + 5) * delta;
+            v.position.z -= (this.speed * 120 + 10) * delta;
             const dist = this.player.position.distanceTo(v.position);
-            if (dist < 2.5) this.handleCollision(v);
+            
+            // Colisiones más precisas
+            const dx = Math.abs(this.player.position.x - v.position.x);
+            const dz = Math.abs(this.player.position.z - v.position.z);
+            
+            if (dz < 2.0 && dx < 1.0) {
+                this.handleCollision(v);
+            }
+
             if (v.position.z < -50) {
                 this.scene.remove(v);
                 this.traffic.splice(index, 1);
             }
         });
+
+        // Spawn de tráfico mejorado
         const now = Date.now();
-        if (now - this.lastSpawnTime > 1500 && Math.random() < 0.3) {
+        if (now - this.lastSpawnTime > 1200 && Math.random() < 0.4) {
             this.spawnTraffic();
             this.lastSpawnTime = now;
         }
-        this.distance += this.speed * 0.1;
-        this.speed = Math.min(this.maxSpeed, 0.5 + (this.distance / 1000));
+
+        // Efecto de líneas de velocidad
+        this.updateSpeedLines();
+
+        this.distance += this.speed * 0.15;
+        this.speed = Math.min(this.maxSpeed, 0.5 + (this.distance / 1500));
         this.updateHUD();
     }
 
+    updateSpeedLines() {
+        this.speedLines.forEach(line => {
+            if (!line.visible && Math.random() < 0.1) {
+                line.visible = true;
+                line.position.set(
+                    (Math.random() - 0.5) * 20,
+                    Math.random() * 5,
+                    150
+                );
+            }
+            if (line.visible) {
+                line.position.z -= this.speed * 300 * 0.016;
+                if (line.position.z < -20) line.visible = false;
+            }
+        });
+    }
+
     handleCollision(v) {
-        const dx = Math.abs(this.player.position.x - v.position.x);
-        const dz = Math.abs(this.player.position.z - v.position.z);
-        if (dz > 1.5 && dx < 0.5) this.gameOver();
-        else if (dx > 0.5 && dx < 1.5) {
-            this.health -= 0.5;
-            if (this.health <= 0) this.gameOver();
-        }
+        // Al chocar perdemos vida y nos detenemos un poco
+        this.health -= 0.8;
+        this.speed *= 0.98;
+        if (this.health <= 0) this.gameOver();
     }
 
     updateHUD() {
